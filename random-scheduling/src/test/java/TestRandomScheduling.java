@@ -11,7 +11,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
-import org.inria.myriads.snoozenoze.groupmanager.estimator.ResourceDemandEstimator;
+import org.inria.myriads.snoozenode.groupmanager.estimator.ResourceDemandEstimator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
