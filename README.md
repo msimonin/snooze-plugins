@@ -1,0 +1,4 @@
+snooze-plugins
+==============
+
+Snooze plugins
