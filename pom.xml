@@ -10,19 +10,32 @@
 
     <distributionManagement>
       <repository>
-        <id>snooze-release-repository</id>
+        <id>snooze-plugins-release-repository</id>
         <name>Snooze Release Repository</name>
         <url>dav:https://webdav.irisa.fr/snooze.inria.fr/htdocs/plugins/releases</url>
       </repository>
 
       <snapshotRepository>
-        <id>snooze-snapshot-repository</id>
+        <id>snooze-plugins-snapshot-repository</id>
         <name>Snooze Snapshot Repository</name>
         <url>dav:https://webdav.irisa.fr/snooze.inria.fr/htdocs/plugins/snapshots</url>
       </snapshotRepository>
     </distributionManagement>
 
+    <scm>
+      <connection>scm:git:http://github.com/msimonin/snooze-plugins.git</connection>
+      <developerConnection>scm:git:ssh://git@github.com/msimonin/snooze-plugins.git</developerConnection>
+      <url>https://github.com/msimonin/snooze-plugins.git</url>
+    </scm>
+
     <build>
+      <extensions>
+        <extension>
+            <groupId>org.apache.maven.wagon</groupId>
+            <artifactId>wagon-webdav-jackrabbit</artifactId>
+            <version>1.0-beta-7</version>
+        </extension>
+      </extensions> 
       <plugins>
        <plugin>
         <groupId>org.apache.maven.plugins</groupId>
