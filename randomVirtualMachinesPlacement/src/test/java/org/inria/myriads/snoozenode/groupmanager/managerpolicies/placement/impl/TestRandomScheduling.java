@@ -67,7 +67,9 @@ public class TestRandomScheduling  extends TestCase
         }
         ResourceDemandEstimator estimator = EasyMock.createMock(ResourceDemandEstimator.class);
         
-        PlacementPolicy randomScheduling = new RandomScheduling(estimator);
+        PlacementPolicy randomScheduling = new RandomScheduling();
+        randomScheduling.setEstimator(estimator);
+        randomScheduling.initialize();
         PlacementPlan placementPlan = randomScheduling.place(virtualMachines, new ArrayList<LocalControllerDescription>());
         
         assertEquals(numberOfVirtualMachines, placementPlan.gettUnassignedVirtualMachines().size());
@@ -113,7 +115,9 @@ public class TestRandomScheduling  extends TestCase
             }
         }
         EasyMock.replay(estimator);
-        PlacementPolicy randomScheduling = new RandomScheduling(estimator);
+        PlacementPolicy randomScheduling = new RandomScheduling();
+        randomScheduling.setEstimator(estimator);
+        randomScheduling.initialize();
         PlacementPlan placementPlan = randomScheduling.place(virtualMachines, localControllers);
         
         assertEquals(numberOfVirtualMachines, placementPlan.gettUnassignedVirtualMachines().size());
@@ -164,7 +168,9 @@ public class TestRandomScheduling  extends TestCase
         }
         EasyMock.replay(estimator);
         
-        PlacementPolicy randomScheduling = new RandomScheduling(estimator);
+        PlacementPolicy randomScheduling = new RandomScheduling();
+        randomScheduling.setEstimator(estimator);
+        randomScheduling.initialize();
         PlacementPlan placementPlan = randomScheduling.place(virtualMachines, localControllers);
         assertEquals(0, placementPlan.gettUnassignedVirtualMachines().size());
     }
@@ -215,7 +221,9 @@ public class TestRandomScheduling  extends TestCase
         }
         EasyMock.replay(estimator);
         
-        PlacementPolicy randomScheduling = new RandomScheduling(estimator);
+        PlacementPolicy randomScheduling = new RandomScheduling();
+        randomScheduling.setEstimator(estimator);
+        randomScheduling.initialize();
         PlacementPlan placementPlan = randomScheduling.place(virtualMachines, localControllers);
         assertEquals(numberOfVirtualMachines / 2, placementPlan.gettUnassignedVirtualMachines().size());
     }

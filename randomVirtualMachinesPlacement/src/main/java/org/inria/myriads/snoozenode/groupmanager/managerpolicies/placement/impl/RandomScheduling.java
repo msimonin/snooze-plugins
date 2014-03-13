@@ -11,7 +11,6 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachin
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineErrorCode;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualMachineStatus;
 import org.inria.myriads.snoozecommon.guard.Guard;
-import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPlan;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.placement.PlacementPolicy;
 import org.inria.myriads.snoozenode.util.ManagementUtils;
@@ -23,24 +22,26 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public final class RandomScheduling implements PlacementPolicy
+public final class RandomScheduling extends PlacementPolicy
 {
     /** Define the logger. */
-    private static final Logger log_ = LoggerFactory.getLogger(PlacementPolicy.class);
+    private static final Logger log_ = LoggerFactory.getLogger(RandomScheduling.class);
 
-    /** Resource demand estimator. */
-    private ResourceDemandEstimator estimator_;
 
     /**
      * Constructor.
      * 
      * @param estimator     The estimator
      */
-    public RandomScheduling(ResourceDemandEstimator estimator)
+    public RandomScheduling()
     {
-        Guard.check(estimator);
+        log_.debug("Creating random virtual machine placement policy");    
+    }
+    
+    @Override
+    public void initialize() 
+    {
         log_.debug("Initializing random virtual machine placement policy");
-        estimator_ = estimator;
     }
 
     /**
@@ -134,4 +135,6 @@ public final class RandomScheduling implements PlacementPolicy
         PlacementPlan placementPlan = new PlacementPlan(usedLocalControllers, unassignedVirtualMachines);
         return placementPlan;
     }
+
+
 }
