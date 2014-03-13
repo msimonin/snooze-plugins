@@ -1,5 +1,6 @@
-.projet
+.project
 .settings
+.classpath
 *.class
 
 # Package Files #
