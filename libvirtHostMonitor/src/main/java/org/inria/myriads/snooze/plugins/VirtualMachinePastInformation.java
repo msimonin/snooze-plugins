@@ -12,9 +12,9 @@ public class VirtualMachinePastInformation
     
     private long previousSystemTime_;
     
-    private long previousRxBytes_;
+    private double previousRxBytes_;
     
-    private long previousTxBytes_;
+    private double previousTxBytes_;
     
     /**
      * @return the previousCpuTime
@@ -51,7 +51,7 @@ public class VirtualMachinePastInformation
     /**
      * @return the previousRxBytes
      */
-    public long getPreviousRxBytes()
+    public double getPreviousRxBytes()
     {
         return previousRxBytes_;
     }
@@ -59,7 +59,7 @@ public class VirtualMachinePastInformation
     /**
      * @param previousRxBytes the previousRxBytes to set
      */
-    public void setPreviousRxBytes(long previousRxBytes)
+    public void setPreviousRxBytes(double previousRxBytes)
     {
         previousRxBytes_ = previousRxBytes;
     }
@@ -67,7 +67,7 @@ public class VirtualMachinePastInformation
     /**
      * @return the previousTxBytes
      */
-    public long getPreviousTxBytes()
+    public double getPreviousTxBytes()
     {
         return previousTxBytes_;
     }
@@ -75,7 +75,7 @@ public class VirtualMachinePastInformation
     /**
      * @param previousTxBytes the previousTxBytes to set
      */
-    public void setPreviousTxBytes(long previousTxBytes)
+    public void setPreviousTxBytes(double previousTxBytes)
     {
         previousTxBytes_ = previousTxBytes;
     }

@@ -23,11 +23,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
-import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.HostMonitoringData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.parser.VirtualClusterParserFactory;
 import org.inria.myriads.snoozecommon.parser.api.VirtualClusterParser;
@@ -37,10 +35,8 @@ import org.inria.myriads.snoozenode.exception.VirtualMachineMonitoringException;
 import org.inria.myriads.snoozenode.localcontroller.actuator.ActuatorFactory;
 import org.inria.myriads.snoozenode.localcontroller.connector.Connector;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.api.HostMonitor;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.api.VirtualMachineMonitor;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.enums.NetworkDirection;
 import org.inria.myriads.snoozenode.localcontroller.monitoring.information.NetworkTrafficInformation;
-import org.inria.myriads.snoozenode.localcontroller.monitoring.information.VirtualMachineInformation;
+import org.inria.myriads.snoozenode.util.OutputUtils;
 import org.libvirt.Connect;
 import org.libvirt.Domain;
 import org.libvirt.DomainInfo;
@@ -52,16 +48,15 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Libvirt based virtual machine monitor.
+ * Aggregates the metrics (cpu, mem, rx, tx) of all the domains running. 
  * 
- * @author Eugen Feller
+ * @author Matthieu Simonin
  */
 public final class LibVirtVirtualMachineHostMonitor
     extends  HostMonitor
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(LibVirtVirtualMachineHostMonitor.class);
-
-    private static final int NETWORK_INTERFACE_POSITION = 0;
                 
     /** Connection to the hypervisor. */
     private Connect connect_;
@@ -69,7 +64,6 @@ public final class LibVirtVirtualMachineHostMonitor
     /** last check.*/
     Map<String, VirtualMachinePastInformation> virtualMachines_;
     
-
     /**
      * Constructor.
      */
@@ -172,62 +166,11 @@ public final class LibVirtVirtualMachineHostMonitor
         return networkTrafficInformation;         
     }
     
-    /**
-     * Returns the current memory usage of a domain.
-     * 
-     * Note: xen driver doesn't support virDomainMemoryStats called by domain.memoryStats (libvirt 0.9.8)
-     * see http://libvirt.org/hvsupport.html  
-     * 
-     * @param domain                                    The domain
-     * @return                                          The memory usage
-     * @throws VirtualMachineMonitoringException 
-     */
-    private long getCurrentMemoryUsage(Domain domain) 
-        throws VirtualMachineMonitoringException
-    {
-        Guard.check(domain);
-        log_.debug("Getting current domain memory usage information");
-        
-        long usedMemory;
-        MemoryStatistic[] memStats;
-        try 
-        {
-            try 
-            {
-                memStats = domain.memoryStats(1);
-                log_.debug(String.format("Size of memory stats: %d", memStats.length));
-            }
-            catch (LibvirtException exception)
-            {
-               log_.debug("No dynamic memory usage information available! Falling back to fixed memory allocation! : ");
-               return domain.getInfo().memory;
-            }
-            
-            if (memStats.length > 0)
-            {
-                MemoryStatistic memory = memStats[0];
-                log_.debug(String.format("Good news! Dynamic memory usage information is available: %d", 
-                                         memory.getValue()));
-                return memory.getValue();
-            }
-            
-            log_.debug("No dynamic memory usage information available! Falling back to fixed memory allocation!");
-            usedMemory = domain.getInfo().memory;
-        } 
-        catch (LibvirtException exception) 
-        {
-            throw new 
-                VirtualMachineMonitoringException(String.format("Unable to capture current memory information: %s", 
-                                                                exception.getMessage()));
-        } 
-        
-        return usedMemory;
-    }
+  
 
     @Override
     public ArrayList<Double> getTotalCapacity() throws HostMonitoringException
     {
-        // TODO Auto-generated method stub
         return null;
     }
 
@@ -254,7 +197,7 @@ public final class LibVirtVirtualMachineHostMonitor
         {
             log_.debug("Unable to fetch the metrics " + e.getMessage());
         }
-        
+        log_.debug(OutputUtils.toString(monitoringData));
         return monitoringData;
     }
     
@@ -303,59 +246,6 @@ public final class LibVirtVirtualMachineHostMonitor
         return domainNames;
     }
 
-    /**
-     * Computes the CPU utilization.
-     * 
-     * @param currentCpuTime                        The current cpu time
-     * @return                                      The prozessor utilzation
-     * @throws VirtualMachineMonitoringException 
-     * @throws HostMonitoringException 
-     */
-    private double computeProzessorUtilization(long currentCpuTime, long cpuTimeStamp, long samplingTimeDifference) 
-        throws VirtualMachineMonitoringException, HostMonitoringException
-    {                  
-        
-        long cpuTimeDiff = currentCpuTime - cpuTimeStamp;
-        double cpuUsagePercentage = cpuTimeDiff / (samplingTimeDifference * 1.0);
-        log_.debug("computeProzessorUtilization :"  + currentCpuTime + "-" + cpuTimeStamp + "-" + samplingTimeDifference);
-        if (cpuUsagePercentage < 0.0)
-        {
-            log_.debug("CPU utilization is NEGATIVE!");
-            cpuUsagePercentage = 0.0;
-        }
-              
-        return cpuUsagePercentage;
-    }
-    
-    /**
-     * Computes the network utilization.
-     * 
-     * @param currentNetworkTraffic     The current network utilization
-     * @param networkDirection          The network direction
-     * @return                          Number of kilobytes
-     */
-//    private double computeNetworkUtilization(double currentNetworkTraffic, NetworkDirection networkDirection) 
-//    {                
-//        double networkTrafficDifference = 0.0;
-//        switch (networkDirection)
-//        {
-//            case Rx :
-//                networkTrafficDifference = currentNetworkTraffic - networkRxBytes_;
-//                break;
-//                
-//            case Tx :
-//                networkTrafficDifference = currentNetworkTraffic - networkTxBytes_;
-//                break;
-//                
-//            default :
-//                log_.error(String.format("Unknown network direction selected: %s", networkDirection));
-//                return 0;
-//        }
-//        
-//        double utilization = networkTrafficDifference / 1024;        
-//        return utilization;
-//    }
-
     public HostMonitoringData getVirtualMachinesMonitoring(String virtualMachineId)
             throws VirtualMachineMonitoringException
     {
@@ -370,22 +260,25 @@ public final class LibVirtVirtualMachineHostMonitor
             DomainInfo domainInformation = domain.getInfo();
             VirtualMachinePastInformation pastInformation = virtualMachines_.get(virtualMachineId);
 
-            if (pastInformation==null)
+            if (pastInformation == null)
             {
                 //first time we see this vm
-                VirtualMachinePastInformation previousInformation = new VirtualMachinePastInformation();
-                previousInformation.setPreviousCpuTime(domainInformation.cpuTime);
-                previousInformation.setPreviousSystemTime(currentSystemTime);
-                virtualMachines_.put(virtualMachineId, previousInformation);
+                pastInformation = new VirtualMachinePastInformation();
+                pastInformation.setPreviousCpuTime(domainInformation.cpuTime);
+                pastInformation.setPreviousRxBytes(0);
+                pastInformation.setPreviousTxBytes(0);
+                pastInformation.setPreviousSystemTime(currentSystemTime);
+                virtualMachines_.put(virtualMachineId, pastInformation);
                 return domainMonitoringData;
             }
-            
+            log_.debug(OutputUtils.toString(pastInformation));
             double cpuUtilization =  computeCpuUtilization(domainInformation, pastInformation, currentSystemTime);
-            double memUtilization = 4;// computeMemUtilization(domainInformation, pastInformation);
-            double rxUtilization = 5;// computeRxUtilization(domainInformation, pastInformation, NetworkDirection.Rx);
-            double txUtilization = 6;// computeTxUtilization(domainInformation, pastInformation, NetworkDirection.Tx);
+            double memUtilization = computeMemUtilization(domain, pastInformation);
+            NetworkDemand networkDemand = computeNetworkUtilization(domain, pastInformation);
+            double txUtilization = networkDemand.getTxBytes();
+            double rxUtilization = networkDemand.getRxBytes();
             
-            pastInformation.setPreviousCpuTime(domainInformation.cpuTime);
+
             pastInformation.setPreviousSystemTime(currentSystemTime);
             
             domainMonitoringData.setTimeStamp(currentSystemTime);
@@ -403,19 +296,102 @@ public final class LibVirtVirtualMachineHostMonitor
         return domainMonitoringData;
     }
 
+    private NetworkDemand computeNetworkUtilization(Domain domain,
+            VirtualMachinePastInformation pastInformation) 
+    {
+        NetworkDemand networkDemand = new NetworkDemand();
+        try {
+            List<NetworkTrafficInformation> networkUtilization = getCurrentNetworkUsage(domain);
+            
+            double rx = 0;
+            double tx = 0;
+            
+            for (NetworkTrafficInformation networkInformation : networkUtilization)
+            {
+                rx += networkInformation.getNetworkDemand().getRxBytes();
+                tx += networkInformation.getNetworkDemand().getTxBytes();
+            }
+            networkDemand.setRxBytes(rx - pastInformation.getPreviousRxBytes());
+            networkDemand.setTxBytes(tx- pastInformation.getPreviousTxBytes());
+            pastInformation.setPreviousRxBytes(rx);
+            pastInformation.setPreviousTxBytes(tx);
+        } catch (VirtualMachineMonitoringException e) 
+        {
+            e.printStackTrace();
+        }
+        
+        return networkDemand;
+    }
+
+
+    /**
+     * 
+     *  Note: xen driver doesn't support virDomainMemoryStats called by domain.memoryStats (libvirt 0.9.8)
+     * see http://libvirt.org/hvsupport.html  
+     * 
+     * @param domain
+     * @param pastInformation
+     * @return
+     */
+    private double computeMemUtilization(Domain domain,
+            VirtualMachinePastInformation pastInformation) 
+    {
+        Guard.check(domain);
+        log_.debug("Getting current domain memory usage information");
+        
+        long usedMemory = 0;
+        MemoryStatistic[] memStats;
+        
+        try 
+        {
+            try 
+            {
+                memStats = domain.memoryStats(1);
+                log_.debug(String.format("Size of memory stats: %d", memStats.length));
+            }
+            catch (LibvirtException exception)
+            {
+               log_.debug("No dynamic memory usage information available! Falling back to fixed memory allocation! : ");
+               return domain.getInfo().memory;
+            }
+            
+            if (memStats.length > 0)
+            {
+                MemoryStatistic memory = memStats[0];
+                log_.debug(String.format("Good news! Dynamic memory usage information is available: %d", 
+                                         memory.getValue()));
+                return memory.getValue();
+            }
+            
+            log_.debug("No dynamic memory usage information available! Falling back to fixed memory allocation!");
+            usedMemory = domain.getInfo().memory;
+        } 
+        catch (LibvirtException exception) 
+        {
+             log_.error(String.format("Unable to capture current memory information: %s", exception.getMessage()));
+        } 
+        
+        return usedMemory;
+    }
+
+    /**
+     * 
+     * Compute the cpu utilization.
+     * 
+     * @param domainInformation     Domain
+     * @param pastInformation       The last seen information.
+     * @param currentSystemTime     current Time.
+     * @return  The cpu utilization.
+     */
     private double computeCpuUtilization(DomainInfo domainInformation, VirtualMachinePastInformation pastInformation,
             long currentSystemTime)
     {
         log_.debug("Computing cpu utilization with : ");
-        
         long cpuTimeStamp = pastInformation.getPreviousCpuTime();
-        log_.debug(cpuTimeStamp  + "");
         long previousSystemTime = pastInformation.getPreviousSystemTime();
-        log_.debug("previous time" + previousSystemTime + "");
-        log_.debug(domainInformation.cpuTime + "");
-        log_.debug("current time" + currentSystemTime + "");
         double utilization  = (domainInformation.cpuTime - cpuTimeStamp)/(currentSystemTime*1.0 - previousSystemTime);
         log_.debug("Returning cpu utilization : " + utilization);
+        pastInformation.setPreviousCpuTime(domainInformation.cpuTime);
         return utilization;
     }
 
