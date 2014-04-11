@@ -5,6 +5,7 @@ import static org.easymock.EasyMock.replay;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -17,6 +18,7 @@ import org.easymock.EasyMock;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozenode.configurator.scheduler.ReconfigurationSettings;
 import org.inria.myriads.snoozenode.estimator.api.ResourceDemandEstimator;
 import org.inria.myriads.snoozenode.estimator.api.impl.StaticDynamicResourceDemandEstimator;
 import org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.ReconfigurationPlan;
@@ -28,29 +30,36 @@ import org.inria.myriads.snoozenode.util.OutputUtils;
  * @author msimonin
  *
  */
-public class testBrtReconfiguration extends TestCase 
+public class BrtReconfigurationOneResources extends TestCase 
 {
     
     /** Estimator.*/
     private ResourceDemandEstimator estimator_;
     
     ReconfigurationPolicy btrPlaceConsolidation_;
+
+    private ReconfigurationSettings settings_;
     
     
     @Override
     protected void setUp() throws Exception {
         estimator_ = EasyMock.createMock(StaticDynamicResourceDemandEstimator.class);
+        settings_ = EasyMock.createMock(ReconfigurationSettings.class);
         btrPlaceConsolidation_ = new BtrPlaceConsolidation();
+        
         btrPlaceConsolidation_.setEstimator(estimator_);
-        // set options is missing
-
+        btrPlaceConsolidation_.setReconfigurationSettings(settings_);
+        HashMap<String, String> mapOptions = new HashMap<String,String>();
+        mapOptions.put("metrics", "cpu");
+        expect(settings_.getOptions()).andReturn(mapOptions).anyTimes();
+        replay(settings_);
     }
     
     
     public void testNoLc()
     {
         btrPlaceConsolidation_.initialize();
-        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/description4.json");
+        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/one/description4.json");
         setExpectations(localControllers);
         
         ReconfigurationPlan reconfigurationPlan = btrPlaceConsolidation_.reconfigure(localControllers);
@@ -61,7 +70,7 @@ public class testBrtReconfiguration extends TestCase
     public void test1LCNoMigration()
     {
         btrPlaceConsolidation_.initialize();
-        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/description3.json");
+        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/one/description3.json");
         setExpectations(localControllers);
        
         estimator_.sortLocalControllers(localControllers, true);
@@ -76,7 +85,7 @@ public class testBrtReconfiguration extends TestCase
     {
         
         btrPlaceConsolidation_.initialize();
-        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/description1.json");
+        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/one/description1.json");
         setExpectations(localControllers);
        
         ReconfigurationPlan reconfigurationPlan = btrPlaceConsolidation_.reconfigure(localControllers);
@@ -89,7 +98,7 @@ public class testBrtReconfiguration extends TestCase
     {
         
         btrPlaceConsolidation_.initialize();
-        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/description2.json");
+        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/one/description2.json");
         setExpectations(localControllers);
        
         ReconfigurationPlan reconfigurationPlan = btrPlaceConsolidation_.reconfigure(localControllers);
@@ -107,7 +116,7 @@ public class testBrtReconfiguration extends TestCase
     {
         
         btrPlaceConsolidation_.initialize();
-        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/description5.json");
+        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/one/description5.json");
         setExpectations(localControllers);
      
         ReconfigurationPlan reconfigurationPlan = btrPlaceConsolidation_.reconfigure(localControllers);
@@ -135,7 +144,7 @@ public class testBrtReconfiguration extends TestCase
     {
         
         btrPlaceConsolidation_.initialize();
-        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/description6.json");
+        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/one/description6.json");
         setExpectations(localControllers);
  
         ReconfigurationPlan reconfigurationPlan = btrPlaceConsolidation_.reconfigure(localControllers);
@@ -152,7 +161,7 @@ public class testBrtReconfiguration extends TestCase
     {
         
         btrPlaceConsolidation_.initialize();
-        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/description7.json");
+        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/one/description7.json");
         setExpectations(localControllers);
         ReconfigurationPlan reconfigurationPlan = btrPlaceConsolidation_.reconfigure(localControllers);
         assertNotNull(reconfigurationPlan);
@@ -177,7 +186,7 @@ public class testBrtReconfiguration extends TestCase
     {
         
         btrPlaceConsolidation_.initialize();
-        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/description8.json");
+        List<LocalControllerDescription> localControllers = generateHierarchy("src/test/resources/one/description8.json");
         setExpectations(localControllers);
         ReconfigurationPlan reconfigurationPlan = btrPlaceConsolidation_.reconfigure(localControllers);
         System.out.println(OutputUtils.toString(reconfigurationPlan));
@@ -185,6 +194,7 @@ public class testBrtReconfiguration extends TestCase
     }
     
     
+   
     private void setExpectations(List<LocalControllerDescription> localControllers) 
     {       
         for (LocalControllerDescription localController: localControllers)

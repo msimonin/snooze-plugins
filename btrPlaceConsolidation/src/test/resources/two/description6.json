@@ -2,15 +2,20 @@
  "localControllers":
  [{
     "id": "lc0",
-    "totalCapacity": [4],
+    "totalCapacity": [4, 4],
     "virtualMachineMetaData" :{
       "vm0-0":
         {
-          "requestedCapacity": [3],
+          "requestedCapacity": [2, 2],
           "virtualMachineLocation": { 
             "virtualMachineId": "vm0-0"
           }
         }
       }
+  },
+  {
+    "id": "lc1",
+    "totalCapacity": [3],
+    "virtualMachineMetaData" :{}
   }]
 }

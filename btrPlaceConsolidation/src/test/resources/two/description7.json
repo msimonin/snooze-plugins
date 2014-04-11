@@ -2,11 +2,11 @@
  "localControllers":
  [{
     "id": "lc0",
-    "totalCapacity": [4],
+    "totalCapacity": [4,4],
     "virtualMachineMetaData" :{
       "vm0-0":
         {
-          "requestedCapacity": [2],
+          "requestedCapacity": [2,2],
           "virtualMachineLocation": { 
             "virtualMachineId": "vm0-0"
           }
@@ -15,11 +15,11 @@
   },
   {
     "id": "lc1",
-    "totalCapacity": [3],
+    "totalCapacity": [3,2],
     "virtualMachineMetaData" :{
       "vm0-1":
         {
-          "requestedCapacity": [1],
+          "requestedCapacity": [1,1],
           "virtualMachineLocation": { 
             "virtualMachineId": "vm0-1"
           }
@@ -28,7 +28,7 @@
   },
   {
     "id": "lc3",
-    "totalCapacity": [3],
+    "totalCapacity": [3,3],
     "virtualMachineMetaData" :{}
   }]
 }

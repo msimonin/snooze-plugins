@@ -1,10 +1,13 @@
 package org.inria.myriads.snoozenode.groupmanager.managerpolicies.reconfiguration.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
+import org.apache.commons.lang.StringUtils;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.globals.Globals;
@@ -40,10 +43,66 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
     /** Precision multiplicator.*/
     private int multiplicator_;
     
+    /** mapping between Snooze resources and BtrResources (to take into account).*/
+    private Map<Integer, ShareableResource> resources_;
+    
+    
+    
+    /**
+     * Constructor
+     */
+    public BtrPlaceConsolidation() 
+    {
+        resources_ = new HashMap<Integer, ShareableResource>();        
+    }
+
     @Override
     public void initialize() 
     {
-        multiplicator_ = 10;
+        Map<String, String> options = reconfigurationSettings_.getOptions();
+        String multiplicator = options.get("multiplicator");
+        if (StringUtils.isEmpty(multiplicator))
+        {
+            multiplicator_ = 10;
+        }
+        else
+        {
+            multiplicator_ = Integer.valueOf(multiplicator);
+        }
+        String metrics = options.get("metrics");
+        if (StringUtils.isEmpty(metrics))
+        {
+            metrics="cpu,mem,tx,rx";
+        }
+        
+        String[] metrics_a = metrics.split(",");
+        for (String m :  metrics_a)
+        {
+            if (m.equals("cpu"))
+            {
+                System.out.println("adding cpu");
+                resources_.put(Globals.CPU_UTILIZATION_INDEX, new ShareableResource("cpu"));
+                continue;
+            }
+            if (m.equals("mem"))
+            {
+                System.out.println("adding mem");
+                resources_.put(Globals.MEMORY_UTILIZATION_INDEX, new ShareableResource("mem"));
+                continue;
+            }
+            if (m.equals("rx"))
+            {
+                System.out.println("adding rx");
+                resources_.put(Globals.NETWORK_RX_UTILIZATION_INDEX, new ShareableResource("rx"));
+                continue;
+            }
+            if (m.equals("tx"))
+            {
+                System.out.println("adding tx");
+                resources_.put(Globals.NETWORK_TX_UTILIZATION_INDEX, new ShareableResource("tx"));
+                continue;
+            }
+        }
     }
 
     @Override
@@ -97,9 +156,11 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
         // Constraints
         List<SatConstraint> constraints = new ArrayList<SatConstraint>();
         
-        // TODO ? in options plugins?
-        ShareableResource resourceCpu = new ShareableResource("cpu");
-        model.attach(resourceCpu);
+        // Add resource to model.
+        for (ShareableResource shareableResource : resources_.values())
+        {
+            model.attach(shareableResource);
+        }
         
         //ShareableResource resourceMem = new ShareableResource("mem");
         List<Node> nodes = new ArrayList<Node>();
@@ -120,9 +181,12 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
             map.addOnlineNode(node);
             System.out.println("Adding node in model for the localcontroller " + localController.getId());
             mappingLocalController.put(node, localController);
-            double totalCpu = Math.ceil(multiplicator_ * localController.getTotalCapacity().get(Globals.CPU_UTILIZATION_INDEX));
+            for (Entry<Integer, ShareableResource> entry : resources_.entrySet())
+            {
+                double totalResource = Math.ceil(multiplicator_ * localController.getTotalCapacity().get(entry.getKey()));
+                entry.getValue().setCapacity(node, (int) totalResource);
+            }
             
-            resourceCpu.setCapacity(node, (int) totalCpu );
             leastLoadedNode = node;
             for (VirtualMachineMetaData virtualMachine : localController.getVirtualMachineMetaData().values())
             {
@@ -131,10 +195,16 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
                 map.addRunningVM(v, node);
                 mappingVirtualMachine.put(v, virtualMachine);
                 ArrayList<Double> resourceDemand = estimator_.estimateVirtualMachineResourceDemand(virtualMachine);
+                for (Entry<Integer, ShareableResource> entry : resources_.entrySet())
+                {
+                    int index = entry.getKey();
+                    ShareableResource shareableResource = entry.getValue();
+                    
+                    double resourceVM= Math.ceil(multiplicator_ * resourceDemand.get(index));                  
+                    constraints.add(new Preserve(v, shareableResource.getResourceIdentifier(), (int) resourceVM));    
+                }   
                 
-                double resourceVMCpu = Math.ceil(multiplicator_ * resourceDemand.get(Globals.CPU_UTILIZATION_INDEX));
                 
-                constraints.add(new Preserve(v, "cpu", (int) resourceVMCpu));
                 
             }
 
