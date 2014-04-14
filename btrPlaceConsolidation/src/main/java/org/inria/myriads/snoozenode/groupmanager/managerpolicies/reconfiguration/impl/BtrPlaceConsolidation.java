@@ -45,6 +45,9 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
     
     /** mapping between Snooze resources and BtrResources (to take into account).*/
     private Map<Integer, ShareableResource> resources_;
+
+
+    private Map<Integer, Double> resourceMultiplicators_;
     
     
     
@@ -53,7 +56,8 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
      */
     public BtrPlaceConsolidation() 
     {
-        resources_ = new HashMap<Integer, ShareableResource>();        
+        resources_ = new HashMap<Integer, ShareableResource>();       
+        resourceMultiplicators_ = new HashMap<Integer, Double>();
     }
 
     @Override
@@ -82,24 +86,28 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
             {
                 System.out.println("adding cpu");
                 resources_.put(Globals.CPU_UTILIZATION_INDEX, new ShareableResource("cpu"));
+                resourceMultiplicators_.put(Globals.CPU_UTILIZATION_INDEX, 10d);
                 continue;
             }
             if (m.equals("mem"))
             {
                 System.out.println("adding mem");
                 resources_.put(Globals.MEMORY_UTILIZATION_INDEX, new ShareableResource("mem"));
+                resourceMultiplicators_.put(Globals.MEMORY_UTILIZATION_INDEX, 1/1024d);
                 continue;
             }
             if (m.equals("rx"))
             {
                 System.out.println("adding rx");
                 resources_.put(Globals.NETWORK_RX_UTILIZATION_INDEX, new ShareableResource("rx"));
+                resourceMultiplicators_.put(Globals.NETWORK_RX_UTILIZATION_INDEX, 10d);
                 continue;
             }
             if (m.equals("tx"))
             {
                 System.out.println("adding tx");
                 resources_.put(Globals.NETWORK_TX_UTILIZATION_INDEX, new ShareableResource("tx"));
+                resourceMultiplicators_.put(Globals.NETWORK_TX_UTILIZATION_INDEX, 10d);
                 continue;
             }
         }
@@ -109,12 +117,12 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
     public ReconfigurationPlan reconfigure(List<LocalControllerDescription> localControllers)
     {
         Guard.check(localControllers);
-        log_.debug("Starting to compute the optimized virtual machine placement");
+        System.out.println("Starting to compute the optimized virtual machine placement");
         OutputUtils.printLocalControllers(localControllers);
         
         if (localControllers.size() < 1)
         {
-            log_.debug("Not enough local controllers to do consolidation!");
+            System.out.println("Not enough local controllers to do consolidation!");
             return null;
         }
         
@@ -124,20 +132,23 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
         //translate to btr plan model.
         ReconfigurationPlan reconfigurationPlan = btrReconfiguration(localControllers);
 
-        
         return reconfigurationPlan;
     }
 
+    
+    /**
+     * 
+     * Try to free to less loaded localcontroller
+     * 
+     * @param localControllers      The list of local controller sorted by descreasing order.
+     * @return  The reconfiguration plan.
+     */
     private ReconfigurationPlan btrReconfiguration(
             List<LocalControllerDescription> localControllers) 
-    {
+    {        
         
-        // TODO move that upper level.
-        if (localControllers.size() < 1)
-        {
-            log_.debug("Not enough local controllers to do consolidation!");
-            return null;
-        }
+        
+        System.out.println(OutputUtils.toString(localControllers));
         
         // Keep a mapping between Btr and Snooze.
         Map<Node, LocalControllerDescription> mappingLocalController = 
@@ -181,9 +192,12 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
             map.addOnlineNode(node);
             System.out.println("Adding node in model for the localcontroller " + localController.getId());
             mappingLocalController.put(node, localController);
+            double multiplicator;
             for (Entry<Integer, ShareableResource> entry : resources_.entrySet())
             {
-                double totalResource = Math.ceil(multiplicator_ * localController.getTotalCapacity().get(entry.getKey()));
+                multiplicator = resourceMultiplicators_.get(entry.getKey());
+                double totalResource = Math.ceil(multiplicator * localController.getTotalCapacity().get(entry.getKey()));
+                System.out.println("Setting capacity to " + localController.getId() + "index : " + entry.getKey() + " value : " + (int) totalResource);
                 entry.getValue().setCapacity(node, (int) totalResource);
             }
             
@@ -194,28 +208,26 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
                 vms.add(v);
                 map.addRunningVM(v, node);
                 mappingVirtualMachine.put(v, virtualMachine);
+                System.out.println("Adding virtual machine in model " + virtualMachine.getVirtualMachineLocation().getVirtualMachineId());
                 ArrayList<Double> resourceDemand = estimator_.estimateVirtualMachineResourceDemand(virtualMachine);
                 for (Entry<Integer, ShareableResource> entry : resources_.entrySet())
                 {
                     int index = entry.getKey();
                     ShareableResource shareableResource = entry.getValue();
-                    
-                    double resourceVM= Math.ceil(multiplicator_ * resourceDemand.get(index));                  
+                    multiplicator = resourceMultiplicators_.get(index);
+                    double resourceVM= Math.ceil(multiplicator * resourceDemand.get(index));                  
+                    System.out.println("Preserve constraint" + " / " +shareableResource.getResourceIdentifier() + " value : " + (int) resourceVM);
                     constraints.add(new Preserve(v, shareableResource.getResourceIdentifier(), (int) resourceVM));    
                 }   
-                
-                
-                
             }
-
         }
 
         if (leastLoadedNode != null)
         {
+            System.out.println("least Lodes localcontroller " + mappingLocalController.get(leastLoadedNode).getId());
             constraints.add(new Offline(leastLoadedNode));
         }
             
-        
         ChocoReconfigurationAlgorithm ra = new DefaultChocoReconfigurationAlgorithm();
         try 
         {
@@ -223,7 +235,7 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
             
             if (plan == null)
             {
-                //no plan has been found.
+                System.out.println("BtrPlace was unable to find a solution");
                 return null;
             }
             
@@ -261,6 +273,7 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
         {
             ex.printStackTrace();
         }
+        System.out.println("No reconfiguration plan has been found");
         return null;
     }
 

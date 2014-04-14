@@ -1,0 +1,68 @@
+{
+ "localControllers":
+ [{
+    "id": "parapluie-16",
+    "totalCapacity": [24, 49566332, 131072, 131072],
+    "virtualMachineMetaData" :{
+      "test_3":
+        {
+          "requestedCapacity": [0.1, 256000, 0.2, 0.2],
+          "virtualMachineLocation": { 
+            "virtualMachineId": "test_3"
+          }
+        },
+      "test_4":
+        {
+          "requestedCapacity": [0.1, 256000, 0.2, 0.2],
+          "virtualMachineLocation": { 
+            "virtualMachineId": "test_3"
+          }
+        }
+     }
+  },
+  {
+    "id": "parapluie-13",
+    "totalCapacity": [24, 49566332, 131072, 131072],
+    "virtualMachineMetaData" :{
+      "test_1":
+       {
+         "requestedCapacity": [0.1, 256000, 0.2, 0.2],
+         "virtualMachineLocation": { 
+           "virtualMachineId": "test_3"
+         }
+       }
+    }
+ },
+ {
+    "id": "parapluie-19",
+    "totalCapacity": [24, 49566332, 131072, 131072],
+    "virtualMachineMetaData" :{
+      "test_3":
+       {
+         "requestedCapacity": [0.1, 256000, 0.2, 0.2],
+         "virtualMachineLocation": { 
+           "virtualMachineId": "test_3"
+         }
+       }
+    }
+  },
+ {
+    "id": "parapluie-15",
+    "totalCapacity": [24, 49566332, 131072, 131072],
+    "virtualMachineMetaData" :{
+      "test_2":
+       {
+         "requestedCapacity": [0.1, 256000, 0.2, 0.2],
+         "virtualMachineLocation": { 
+           "virtualMachineId": "test_2"
+         }
+       }
+    }
+  },
+ {
+    "id": "parapluie-2",
+    "totalCapacity": [24, 49566332, 131072, 131072],
+    "virtualMachineMetaData" :{}
+  }
+ ]  
+}

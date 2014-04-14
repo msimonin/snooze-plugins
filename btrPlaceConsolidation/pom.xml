@@ -19,8 +19,9 @@
         <url>http://btrp.inria.fr/repos/snapshot-releases</url>
     </repository>
   </repositories>
+ 
 
-  <build>
+   <build>
     <plugins> 
       <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -57,6 +58,9 @@
   </build>
 
 	<dependencies>
+
+
+
 		<dependency>
 		   <groupId>btrplace</groupId>
 		   <artifactId>solver-bundle</artifactId>
@@ -69,6 +73,7 @@
 			<artifactId>jackson-core-asl</artifactId>
 			<version>1.9.13</version>
 		</dependency>
+
 	</dependencies>
 	
 </project>

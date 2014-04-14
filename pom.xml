@@ -68,7 +68,7 @@
     <dependency>
       <groupId>org.inria.myriads</groupId>
       <artifactId>snoozenode</artifactId>
-      <version>3.0.0-SNAPSHOT</version>
+   <version>3.0.0-SNAPSHOT</version>
      </dependency>
      
       <dependency>
