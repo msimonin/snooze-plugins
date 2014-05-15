@@ -1,0 +1,9 @@
+{
+  "localControllers": 
+    [
+      {
+        "id": "lc0",
+        "totalCapacity": [16,3145728,131072,131072]
+      }
+    ]
+}

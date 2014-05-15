@@ -1,0 +1,15 @@
+{
+ "virtualMachines":
+ [{
+    "requestedCapacity": [3,512000,12800,12800],
+    "virtualMachineLocation": { 
+      "virtualMachineId": "vm1"
+    }
+   },
+    {
+    "requestedCapacity": [3,512000,12800,12800],
+    "virtualMachineLocation": { 
+      "virtualMachineId": "vm2"
+    }
+  }]
+}

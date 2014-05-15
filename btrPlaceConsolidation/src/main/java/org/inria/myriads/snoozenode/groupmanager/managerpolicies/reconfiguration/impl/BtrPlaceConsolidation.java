@@ -46,9 +46,8 @@ public class BtrPlaceConsolidation extends ReconfigurationPolicy
     /** mapping between Snooze resources and BtrResources (to take into account).*/
     private Map<Integer, ShareableResource> resources_;
 
-
+    /** Resource multiplicator.*/
     private Map<Integer, Double> resourceMultiplicators_;
-    
     
     
     /**

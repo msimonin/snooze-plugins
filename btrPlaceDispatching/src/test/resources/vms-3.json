@@ -1,0 +1,28 @@
+{
+ "virtualMachines":
+ [{
+    "requestedCapacity": [1,512000,12800,12800],
+    "virtualMachineLocation": { 
+      "virtualMachineId": "vm1"
+    }
+   },
+  {
+    "requestedCapacity": [1,512000,12800,12800],
+    "virtualMachineLocation": { 
+      "virtualMachineId": "vm2"
+    }
+  },
+  {
+    "requestedCapacity": [1,512000,12800,12800],
+    "virtualMachineLocation": { 
+      "virtualMachineId": "vm3"
+    }
+  },
+  {
+    "requestedCapacity": [1,512000,12800,12800],
+    "virtualMachineLocation": { 
+      "virtualMachineId": "vm4"
+    }
+  }
+ ]
+}

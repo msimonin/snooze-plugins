@@ -7,6 +7,6 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>randomVirtualMachinesPlacement</artifactId>
   <packaging>jar</packaging>
-  <name>plugin for the scheduler</name>
+  <name>randomVirtualMachinesPlacement</name>
   <description>Random scheduler plugin</description>
 </project>

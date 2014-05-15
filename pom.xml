@@ -55,6 +55,7 @@
       <module>alwaysAnomalyRejected</module>
       <module>alwaysAnomalyDetected</module>
       <module>btrPlaceConsolidation</module>
+      <module>btrPlacePlacement</module>
   </modules>
 
   <dependencies>
