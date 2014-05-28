@@ -1,7 +1,12 @@
 {
   "summaries":{
     "gm1": {
-      "activeCapacity": [4,1048576,1048576,1048576]
+      "activeCapacity": [4,1048576,1048576,1048576],
+      "localControllers": [
+          {
+            "id": "lc11"
+          }
+        ]
     }
   }
 }

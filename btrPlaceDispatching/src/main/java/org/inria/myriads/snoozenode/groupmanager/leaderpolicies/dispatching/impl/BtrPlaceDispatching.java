@@ -112,7 +112,7 @@ public class BtrPlaceDispatching extends DispatchingPolicy
     public DispatchingPlan dispatch(
             List<VirtualMachineMetaData> virtualMachines,
             List<GroupManagerDescription> groupManagers) 
-    {           
+    {               	
     	// Keep a mapping between Btr and Snooze.
         Map<Node, GroupManagerDescription> mappingGroupManager = 
                 new HashMap<Node, GroupManagerDescription>();
@@ -142,21 +142,24 @@ public class BtrPlaceDispatching extends DispatchingPolicy
         
         for (GroupManagerDescription groupManager : groupManagers)
         {
-            Node node = model.newNode();
-            nodes.add(node);
-            map.addOnlineNode(node);
-            mappingGroupManager.put(node, groupManager);
-            
             ArrayList<Double> capacity = 
                     estimator_.computeGroupManagerCapacity(groupManager);
             
-            for (Entry<Integer, ShareableResource> entry : resources_.entrySet())
-            {
-                multiplicator = resourceMultiplicators_.get(entry.getKey());
-                double totalResource = Math.ceil(multiplicator * capacity.get(entry.getKey()));
-                
-                entry.getValue().setCapacity(node, (int) totalResource);
-            }
+        	for (int i=0; i < groupManager.getLocalControllers().size(); i++)
+        	{        		
+	            Node node = model.newNode(); 
+	            nodes.add(node);
+	            map.addOnlineNode(node);
+	            mappingGroupManager.put(node, groupManager);
+	            
+	            for (Entry<Integer, ShareableResource> entry : resources_.entrySet())
+	            {
+	                multiplicator = resourceMultiplicators_.get(entry.getKey());
+	                double totalResource = Math.ceil(multiplicator * capacity.get(entry.getKey()));
+	                
+	                entry.getValue().setCapacity(node, (int) totalResource);
+	            }
+        	}
         }
         
         for (VirtualMachineMetaData virtualMachine : virtualMachines)

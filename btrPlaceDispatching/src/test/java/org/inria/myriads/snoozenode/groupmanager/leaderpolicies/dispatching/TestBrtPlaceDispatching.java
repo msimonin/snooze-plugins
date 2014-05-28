@@ -133,6 +133,7 @@ public class TestBrtPlaceDispatching extends TestCase
             groupManager.setHostname(groupManagerId);
             groupManager.setId(groupManagerId);
             groupManagers.add(groupManager);
+            groupManager.setLocalControllersFromArray(summary.getLocalControllers());
             //set expectation
             // We use the active capacity as capacity (beware of that)
             expect(estimator_.computeGroupManagerCapacity(groupManager)).andReturn(summary.getActiveCapacity()).anyTimes();
